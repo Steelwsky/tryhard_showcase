@@ -1,5 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tryhard_showcase/app/data/auth/models/auth_exception.dart';
 import 'package:tryhard_showcase/app/data/auth/models/auth_user/auth_user.dart';
@@ -7,7 +6,7 @@ import 'package:tryhard_showcase/app/di/di.dart';
 import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
 import 'package:tryhard_showcase/features/auth/domain/models/user_input.dart';
 
-import '../../../fake_storage.dart';
+import '../../../storage/fake_storage.dart';
 import 'auth_form_support_test.dart';
 
 void main() {
@@ -37,14 +36,8 @@ void main() {
   );
 
   setUp(() async {
-    late Storage storage;
-    storage = FakeStorage();
-    when(() => storage.write(any(), any<dynamic>())).thenAnswer((_) async {});
-    when<dynamic>(() => storage.read(any())).thenReturn(<String, dynamic>{});
-    when(() => storage.delete(any())).thenAnswer((_) async {});
-    when(() => storage.clear()).thenAnswer((_) async {});
+    initHydratedStorage();
 
-    HydratedBloc.storage = storage;
     await initDi("test");
 
     when(

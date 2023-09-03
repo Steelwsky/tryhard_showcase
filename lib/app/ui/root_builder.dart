@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tryhard_showcase/app/utils/toast.dart';
 import 'package:tryhard_showcase/features/auth/domain/auth_cubit/auth_cubit.dart';
 
 class RootBuilder extends StatelessWidget {
@@ -14,12 +15,17 @@ class RootBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthCubit, AuthState>(
+    return BlocConsumer<AuthCubit, AuthState>(
       builder: (context, state) {
-        return state.when(
-          notAuthorized: () => isNotAuthorized(context),
-          authorized: (_) => isAuthorized(context),
-        );
+        return switch (state) {
+          AuthNotAuthorizedState() ||
+          AuthErrorState() =>
+            isNotAuthorized(context),
+          AuthAuthorizedState() => isAuthorized(context),
+        };
+      },
+      listener: (context, state) {
+        if (state is AuthErrorState) showServiceToast(state.message);
       },
     );
   }

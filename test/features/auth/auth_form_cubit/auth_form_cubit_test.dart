@@ -1,6 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tryhard_showcase/app/constants/strings/errors.dart';
 import 'package:tryhard_showcase/app/data/auth/models/auth_exception.dart';
@@ -13,10 +12,10 @@ import 'package:tryhard_showcase/features/auth/domain/auth_cubit/auth_cubit.dart
 import 'package:tryhard_showcase/features/auth/domain/auth_form_cubit/auth_form_cubit.dart';
 import 'package:tryhard_showcase/features/auth/domain/auth_form_cubit/auth_form_state.dart';
 import 'package:tryhard_showcase/features/auth/domain/models/user_input.dart';
-import 'package:tryhard_showcase/features/profile/data/fake_user_repository.dart';
-import 'package:tryhard_showcase/features/profile/data/user_repository.dart';
+import 'package:tryhard_showcase/features/profile/data/remote/fake_user_repository.dart';
+import 'package:tryhard_showcase/features/profile/data/remote/user_repository.dart';
 
-import '../../../fake_storage.dart';
+import '../../../storage/fake_storage.dart';
 
 void main() {
   late AuthRepository authRepository;
@@ -54,14 +53,8 @@ void main() {
   );
 
   setUp(() async {
-    late Storage storage;
-    storage = FakeStorage();
-    when(() => storage.write(any(), any<dynamic>())).thenAnswer((_) async {});
-    when<dynamic>(() => storage.read(any())).thenReturn(<String, dynamic>{});
-    when(() => storage.delete(any())).thenAnswer((_) async {});
-    when(() => storage.clear()).thenAnswer((_) async {});
+    initHydratedStorage();
 
-    HydratedBloc.storage = storage;
     authRepository = FakeAuthRepository();
     userRepository = FakeUserRepository();
     authCubit = AuthCubit(authRepository, userRepository);

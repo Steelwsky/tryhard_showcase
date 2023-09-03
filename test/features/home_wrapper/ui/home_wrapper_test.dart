@@ -1,23 +1,22 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:mocktail/mocktail.dart';
-import 'package:tryhard_showcase/app/data/auth/models/auth_user/auth_user.dart';
 import 'package:tryhard_showcase/app/data/datasource/models/user.dart';
 import 'package:tryhard_showcase/app/di/di.dart';
 import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
-import 'package:tryhard_showcase/features/profile/data/user_repository.dart';
+import 'package:tryhard_showcase/features/profile/domain/interactor/user_interactor.dart';
 
-import '../../../fake_storage.dart';
+import '../../../storage/fake_storage.dart';
 import 'home_wrapper_support_test.dart';
 
 void main() {
   const String userGuid = '123456789101112';
   const String email = 'test@test.com';
 
-  const AuthUser authUser = AuthUser(
-    userGuid: userGuid,
-    email: email,
-  );
+  const index0 = 0;
+  const index1 = 1;
+  const index2 = 2;
+
+  const listIndexes = [index0, index1, index2];
 
   final UserProfile userProfile = UserProfile(
     guid: userGuid,
@@ -26,14 +25,7 @@ void main() {
   );
 
   setUp(() async {
-    late Storage storage;
-    storage = FakeStorage();
-    when(() => storage.write(any(), any<dynamic>())).thenAnswer((_) async {});
-    when<dynamic>(() => storage.read(any())).thenReturn(<String, dynamic>{});
-    when(() => storage.delete(any())).thenAnswer((_) async {});
-    when(() => storage.clear()).thenAnswer((_) async {});
-
-    HydratedBloc.storage = storage;
+    initHydratedStorage();
 
     await initDi("test");
 
@@ -41,10 +33,10 @@ void main() {
       () => sl<AuthRepository>().getCurrentUserId(),
     ).thenAnswer((_) => userGuid);
     when(
-      () => sl<UserRepository>().getUserProfile(
-        userGuid: userGuid,
-      ),
-    ).thenAnswer((_) async => userProfile);
+      () => sl<UserInteractor>().getUserProfile(userGuid: userGuid),
+    ).thenAnswer((_) async {
+      return userProfile;
+    });
   });
 
   tearDown(() {
@@ -55,27 +47,24 @@ void main() {
     testWidgets(
       'The home wrapper is found after pumping up',
       harness((given, when, then) async {
-        await given.widgetIsPumped(authUser);
-        await then.widgetIsFound();
+        await given.userHomeWrapperStateAsInitial();
+        await given.widgetIsPumped();
+        await then.homeScreenWrapperWidgetIsFound();
       }),
     );
+  });
 
-    testWidgets(
-      'Overview screen is found when bottom nav bar item with index 0 is tapped',
-      harness((given, when, then) async {
-        await given.widgetIsPumped(authUser);
-        await when.bottomNavBarItemIsTapped(index: 0);
-        await then.findOverviewScreen();
-      }),
-    );
-
-    testWidgets(
-      'Info screen is found when bottom nav bar item with index 1 is tapped',
-      harness((given, when, then) async {
-        await given.widgetIsPumped(authUser);
-        await when.bottomNavBarItemIsTapped(index: 1);
-        await then.findInfoScreen();
-      }),
-    );
+  group('something', () {
+    for (int index in listIndexes) {
+      testWidgets(
+        'Screen with index $index screen is found when info bottom nav bar item with index $index is tapped',
+        harness((given, when, then) async {
+          await given.userHomeWrapperStateWithPageIndex(index);
+          await given.widgetViewIsPumped();
+          await when.bottomNavBarItemIsTappedWithIndex(index);
+          await then.findScreenWithKeyByIndex(index);
+        }),
+      );
+    }
   });
 }

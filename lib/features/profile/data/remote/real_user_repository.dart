@@ -30,9 +30,7 @@ class RealUserRepository implements UserRepository {
   }
 
   @override
-  Future<void> deleteUserProfile({
-    required String userGuid,
-  }) {
+  Future<void> deleteUserProfile({required String userGuid}) {
     try {
       return _userDb.deleteUser(userGuid: userGuid);
     } on ApiException catch (_) {
@@ -41,18 +39,9 @@ class RealUserRepository implements UserRepository {
   }
 
   @override
-  Future<UserProfile> getUserProfile({
-    required String? userGuid,
-  }) {
+  Future<UserProfile> getUserProfile({required String userGuid}) {
     try {
-      if (userGuid != null) {
-        return _userDb.getUserProfile(userGuid: userGuid);
-      } else {
-        throw ApiException(
-          code: 'no-user-guid',
-          description: 'User ID is not set. Please try to log in again',
-        );
-      }
+      return _userDb.getUserProfile(userGuid: userGuid);
     } on ApiException catch (_) {
       rethrow;
     }

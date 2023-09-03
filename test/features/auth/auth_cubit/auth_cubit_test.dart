@@ -1,6 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tryhard_showcase/app/data/auth/models/auth_exception.dart';
 import 'package:tryhard_showcase/app/data/auth/models/auth_user/auth_user.dart';
@@ -9,10 +8,10 @@ import 'package:tryhard_showcase/app/data/datasource/models/user_info_basic.dart
 import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
 import 'package:tryhard_showcase/features/auth/data/fake_auth_repository.dart';
 import 'package:tryhard_showcase/features/auth/domain/auth_cubit/auth_cubit.dart';
-import 'package:tryhard_showcase/features/profile/data/fake_user_repository.dart';
-import 'package:tryhard_showcase/features/profile/data/user_repository.dart';
+import 'package:tryhard_showcase/features/profile/data/remote/fake_user_repository.dart';
+import 'package:tryhard_showcase/features/profile/data/remote/user_repository.dart';
 
-import '../../../fake_storage.dart';
+import '../../../storage/fake_storage.dart';
 
 void main() {
   late AuthRepository authRepository;
@@ -43,14 +42,7 @@ void main() {
   );
 
   setUp(() async {
-    late Storage storage;
-    storage = FakeStorage();
-    when(() => storage.write(any(), any<dynamic>())).thenAnswer((_) async {});
-    when<dynamic>(() => storage.read(any())).thenReturn(<String, dynamic>{});
-    when(() => storage.delete(any())).thenAnswer((_) async {});
-    when(() => storage.clear()).thenAnswer((_) async {});
-
-    HydratedBloc.storage = storage;
+    initHydratedStorage();
     authRepository = FakeAuthRepository();
     userRepository = FakeUserRepository();
   });
@@ -58,7 +50,7 @@ void main() {
   group('AuthCubit', () {
     test('initial state is not Authorized ', () {
       expect(AuthCubit(authRepository, userRepository).state,
-          AuthState.notAuthorized());
+          AuthNotAuthorizedState());
     });
 
     group('call login from auth repository', () {
@@ -75,27 +67,27 @@ void main() {
         build: () => AuthCubit(authRepository, userRepository),
         act: (cubit) => cubit.logIn(email: inputEmail, password: inputPassword),
         expect: () => <AuthState>[
-          AuthState.authorized(authUser),
+          AuthAuthorizedState(user: authUser),
         ],
       );
 
       blocTest<AuthCubit, AuthState>(
-          'login returns an exception, state is nonAuthorized',
-          setUp: () {
-            when(
-              () => authRepository.login(
-                  email: inputEmail, password: inputPassword),
-            ).thenThrow(authException);
-          },
-          build: () => AuthCubit(authRepository, userRepository),
-          act: (cubit) =>
-              cubit.logIn(email: inputEmail, password: inputPassword),
-          expect: () => <AuthState>[
-                AuthState.notAuthorized(),
-              ],
-          errors: () => <AuthException>[
-                authException,
-              ]);
+        'login returns an exception, state is not Authorized',
+        setUp: () {
+          when(
+            () => authRepository.login(
+                email: inputEmail, password: inputPassword),
+          ).thenThrow(authException);
+        },
+        build: () => AuthCubit(authRepository, userRepository),
+        act: (cubit) => cubit.logIn(email: inputEmail, password: inputPassword),
+        expect: () => <AuthState>[
+          AuthNotAuthorizedState(),
+        ],
+        errors: () => <AuthException>[
+          authException,
+        ],
+      );
     });
 
     group('call register from auth repository', () {
@@ -122,51 +114,53 @@ void main() {
           password: inputPassword,
         ),
         expect: () => <AuthState>[
-          AuthState.authorized(authUser),
+          AuthAuthorizedState(user: authUser),
         ],
       );
 
       blocTest<AuthCubit, AuthState>(
-          'auth api returns an exception state stays as nonAuthorized',
-          setUp: () {
-            when(
-              () => authRepository.register(
-                  email: inputEmail, password: inputPassword),
-            ).thenThrow(authException);
-          },
-          build: () => AuthCubit(authRepository, userRepository),
-          act: (cubit) =>
-              cubit.register(email: inputEmail, password: inputPassword),
-          expect: () => <AuthState>[
-                AuthState.notAuthorized(),
-              ],
-          errors: () => <Exception>[
-                authException,
-              ]);
+        'auth api returns an exception state stays as not authorized',
+        setUp: () {
+          when(
+            () => authRepository.register(
+                email: inputEmail, password: inputPassword),
+          ).thenThrow(authException);
+        },
+        build: () => AuthCubit(authRepository, userRepository),
+        act: (cubit) =>
+            cubit.register(email: inputEmail, password: inputPassword),
+        expect: () => <AuthState>[
+          AuthNotAuthorizedState(),
+        ],
+        errors: () => <Exception>[
+          authException,
+        ],
+      );
 
       blocTest<AuthCubit, AuthState>(
-          'creating user method returns an exception state stays as nonAuthorized',
-          setUp: () {
-            when(
-              () => authRepository.register(
-                email: inputEmail,
-                password: inputPassword,
-              ),
-            ).thenAnswer((_) async {
-              return authUser;
-            });
-            when(
-              () => userRepository.createUserProfile(
-                userBasicInfo: userBasicInfo,
-              ),
-            ).thenThrow(dbException);
-          },
-          build: () => AuthCubit(authRepository, userRepository),
-          act: (cubit) =>
-              cubit.register(email: inputEmail, password: inputPassword),
-          errors: () => <Exception>[
-                dbException,
-              ]);
+        'creating user method returns an exception state stays as not authorized',
+        setUp: () {
+          when(
+            () => authRepository.register(
+              email: inputEmail,
+              password: inputPassword,
+            ),
+          ).thenAnswer((_) async {
+            return authUser;
+          });
+          when(
+            () => userRepository.createUserProfile(
+              userBasicInfo: userBasicInfo,
+            ),
+          ).thenThrow(dbException);
+        },
+        build: () => AuthCubit(authRepository, userRepository),
+        act: (cubit) =>
+            cubit.register(email: inputEmail, password: inputPassword),
+        errors: () => <Exception>[
+          dbException,
+        ],
+      );
     });
 
     group('call google log in from auth repository', () {
@@ -187,45 +181,80 @@ void main() {
         build: () => AuthCubit(authRepository, userRepository),
         act: (cubit) => cubit.onGoogleSignIn(),
         expect: () => <AuthState>[
-          AuthState.authorized(authUser),
+          AuthAuthorizedState(user: authUser),
         ],
       );
 
       blocTest<AuthCubit, AuthState>(
-          'auth api returns an exception state stays as nonAuthorized',
-          setUp: () {
-            when(
-              () => authRepository.googleLogIn(),
-            ).thenThrow(authException);
-          },
-          build: () => AuthCubit(authRepository, userRepository),
-          act: (cubit) => cubit.onGoogleSignIn(),
-          expect: () => <AuthState>[
-                AuthState.notAuthorized(),
-              ],
-          errors: () => <Exception>[
-                authException,
-              ]);
+        'auth api returns an exception state stays as not Authorized',
+        setUp: () {
+          when(
+            () => authRepository.googleLogIn(),
+          ).thenThrow(authException);
+        },
+        build: () => AuthCubit(authRepository, userRepository),
+        act: (cubit) => cubit.onGoogleSignIn(),
+        expect: () => <AuthState>[
+          AuthNotAuthorizedState(),
+        ],
+        errors: () => <Exception>[
+          authException,
+        ],
+      );
 
       blocTest<AuthCubit, AuthState>(
-          'creating user method returns an exception state stays as nonAuthorized',
-          setUp: () {
-            when(
-              () => authRepository.googleLogIn(),
-            ).thenAnswer((_) async {
-              return authUser;
-            });
-            when(
-              () => userRepository.createUserProfile(
-                userBasicInfo: userBasicInfo,
-              ),
-            ).thenThrow(dbException);
-          },
-          build: () => AuthCubit(authRepository, userRepository),
-          act: (cubit) => cubit.onGoogleSignIn(),
-          errors: () => <Exception>[
-                dbException,
-              ]);
+        'creating user method returns an exception state stays as not Authorized',
+        setUp: () {
+          when(
+            () => authRepository.googleLogIn(),
+          ).thenAnswer((_) async {
+            return authUser;
+          });
+          when(
+            () => userRepository.createUserProfile(
+              userBasicInfo: userBasicInfo,
+            ),
+          ).thenThrow(dbException);
+        },
+        build: () => AuthCubit(authRepository, userRepository),
+        act: (cubit) => cubit.onGoogleSignIn(),
+        errors: () => <Exception>[
+          dbException,
+        ],
+      );
+    });
+
+    group('call logout from auth repository', () {
+      blocTest<AuthCubit, AuthState>(
+        'user successfully logged out',
+        setUp: () {
+          when(
+            () => authRepository.logout(),
+          ).thenAnswer((_) async {
+            return;
+          });
+        },
+        build: () => AuthCubit(authRepository, userRepository),
+        act: (cubit) => cubit.logout(),
+        expect: () => <AuthState>[
+          AuthNotAuthorizedState(),
+        ],
+      );
+
+      blocTest<AuthCubit, AuthState>(
+        'logout returns an AuthException error, state will become as not Authorized',
+        setUp: () {
+          when(
+            () => authRepository.logout(),
+          ).thenThrow(authException);
+        },
+        build: () => AuthCubit(authRepository, userRepository),
+        act: (cubit) => cubit.logout(),
+        expect: () => <AuthState>[
+          AuthErrorState(message: authException.message),
+          AuthNotAuthorizedState(),
+        ],
+      );
     });
   });
 }

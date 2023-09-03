@@ -1,16 +1,19 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:given_when_then/given_when_then.dart';
-import 'package:tryhard_showcase/app/constants/keys.dart';
-import 'package:tryhard_showcase/app/data/auth/models/auth_user/auth_user.dart';
-import 'package:tryhard_showcase/app/di/di.dart';
-import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
-import 'package:tryhard_showcase/features/auth/domain/auth_cubit/auth_cubit.dart';
-import 'package:tryhard_showcase/features/home_wrapper/domain/home_cubit/home_cubit.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:tryhard_showcase/features/home_wrapper/domain/cubit/home_cubit.dart';
+import 'package:tryhard_showcase/features/home_wrapper/domain/models/tabs.dart';
 import 'package:tryhard_showcase/features/home_wrapper/ui/home_wrapper.dart';
-import 'package:tryhard_showcase/features/profile/data/user_repository.dart';
-import 'package:tryhard_showcase/features/profile/domain/profile_cubit.dart';
+
+const _testKey0 = ValueKey('testKey0');
+const _testKey1 = ValueKey('testKey1');
+const _testKey2 = ValueKey('testKey2');
+
+class MockHomeWrapperCubit extends MockCubit<HomeWrapperState>
+    implements HomeWrapperCubit {}
 
 Future<void> Function(WidgetTester) harness(
     WidgetTestHarnessCallback<HomeWrapperWidgetTestHarness> callback) {
@@ -21,70 +24,123 @@ Future<void> Function(WidgetTester) harness(
 class HomeWrapperWidgetTestHarness extends WidgetTestHarness {
   HomeWrapperWidgetTestHarness(WidgetTester tester) : super(tester);
 
-  final homeWrapperCubit = HomeWrapperCubit();
-  final profileCubit = ProfileCubit(
-    sl<AuthRepository>(),
-    sl<UserRepository>(),
-    sl<AuthCubit>(),
-  );
+  final pages = [
+    const _TestPage0(
+      key: _testKey0,
+    ),
+    const _TestPage1(
+      key: _testKey1,
+    ),
+    const _TestPage2(
+      key: _testKey2,
+    ),
+  ];
+
+  final homeWrapperCubit = MockHomeWrapperCubit();
 }
 
 extension ExampleGiven on WidgetTestGiven<HomeWrapperWidgetTestHarness> {
-  Future<void> widgetIsPumped(AuthUser authUser) async {
-    await tester.pumpWidget(
-      _TestHomeWrapperWidget(
-        profileCubit: this.harness.profileCubit,
-        homeWrapperCubit: this.harness.homeWrapperCubit,
+  Future<void> userHomeWrapperStateAsInitial() async {
+    when(() => this.harness.homeWrapperCubit.state).thenReturn(
+      HomeWrapperState(
+        page: 0,
+        pages: this.harness.pages,
+        tabs: BottomNavBarItems().tabs,
       ),
+    );
+  }
+
+  Future<void> userHomeWrapperStateWithPageIndex(int index) async {
+    when(() => this.harness.homeWrapperCubit.state).thenReturn(
+      HomeWrapperState(
+        page: index,
+        pages: this.harness.pages,
+        tabs: BottomNavBarItems().tabs,
+      ),
+    );
+  }
+
+  Future<void> widgetIsPumped() async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: HomeScreenWrapper(),
+      ),
+    );
+  }
+
+  Future<void> widgetViewIsPumped() async {
+    await tester.pumpWidget(
+      _TestHomeWrapperWidget(homeWrapperCubit: this.harness.homeWrapperCubit),
     );
   }
 }
 
 extension ExampleWhen on WidgetTestWhen<HomeWrapperWidgetTestHarness> {
-  Future<void> bottomNavBarItemIsTapped({required int index}) async {
-    await tester.tap(find
-        .byIcon(this.harness.homeWrapperCubit.state.tabs[index].icon!.icon!));
+  Future<void> bottomNavBarItemIsTappedWithIndex(int index) async {
+    await tester.tap(
+      find.byKey(
+        this.harness.homeWrapperCubit.state.tabs[index].icon!.key!,
+      ),
+    );
   }
 }
 
 extension ExampleThen on WidgetTestThen<HomeWrapperWidgetTestHarness> {
-  Future<void> widgetIsFound() async {
+  Future<void> homeScreenWrapperWidgetIsFound() async {
     await tester.pump();
     expect(find.byType(HomeScreenWrapper), findsOneWidget);
   }
 
-  Future<void> findOverviewScreen() async {
+  Future<void> findScreenWithKey0() async {
     await tester.pump();
-    expect(find.byKey(kOverviewScreen), findsOneWidget);
+    expect(find.byKey(_testKey0), findsOneWidget);
   }
 
-  Future<void> findInfoScreen() async {
+  Future<void> findScreenWithKeyByIndex(int index) async {
     await tester.pump();
-    expect(find.byKey(kInfoScreen), findsOneWidget);
+    expect(find.byKey(this.harness.pages[index].key!), findsOneWidget);
   }
 }
 
 class _TestHomeWrapperWidget extends StatelessWidget {
-  const _TestHomeWrapperWidget({
-    Key? key,
-    required this.profileCubit,
-    required this.homeWrapperCubit,
-  }) : super(key: key);
-  final ProfileCubit profileCubit;
+  const _TestHomeWrapperWidget({required this.homeWrapperCubit});
+
   final HomeWrapperCubit homeWrapperCubit;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        body: MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: profileCubit),
-            BlocProvider.value(value: homeWrapperCubit),
-          ],
-          child: const HomeScreenWrapper(),
-        ),
+      home: BlocProvider(
+        create: (context) => homeWrapperCubit,
+        child: const HomeScreenWrapperView(),
       ),
     );
+  }
+}
+
+class _TestPage0 extends StatelessWidget {
+  const _TestPage0({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+
+class _TestPage1 extends StatelessWidget {
+  const _TestPage1({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
+  }
+}
+
+class _TestPage2 extends StatelessWidget {
+  const _TestPage2({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const Placeholder();
   }
 }

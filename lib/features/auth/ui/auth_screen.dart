@@ -22,10 +22,10 @@ class AuthScreen extends StatelessWidget {
                 constraints: const BoxConstraints(
                   maxWidth: 768,
                 ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
-                    children: const [
+                    children: [
                       _spacer,
                       LogoWidget(),
                       _spacer,

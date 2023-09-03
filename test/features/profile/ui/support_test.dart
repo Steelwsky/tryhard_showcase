@@ -1,16 +1,20 @@
+import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:given_when_then/given_when_then.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:tryhard_showcase/app/constants/keys.dart';
-import 'package:tryhard_showcase/app/di/di.dart';
+import 'package:tryhard_showcase/app/data/datasource/models/user.dart';
 import 'package:tryhard_showcase/app/ui/components/avatar.dart';
-import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
 import 'package:tryhard_showcase/features/auth/domain/auth_cubit/auth_cubit.dart';
-import 'package:tryhard_showcase/features/home_wrapper/domain/home_cubit/home_cubit.dart';
-import 'package:tryhard_showcase/features/profile/data/user_repository.dart';
-import 'package:tryhard_showcase/features/profile/domain/profile_cubit.dart';
+import 'package:tryhard_showcase/features/profile/domain/cubit/profile_cubit.dart';
 import 'package:tryhard_showcase/features/profile/ui/profile.dart';
+
+class MockProfileCubit extends MockCubit<ProfileState>
+    implements ProfileCubit {}
+
+class MockAuthCubit extends MockCubit<AuthState> implements AuthCubit {}
 
 Future<void> Function(WidgetTester) harness(
     WidgetTestHarnessCallback<ProfileOverviewWidgetTestHarness> callback) {
@@ -21,27 +25,52 @@ Future<void> Function(WidgetTester) harness(
 class ProfileOverviewWidgetTestHarness extends WidgetTestHarness {
   ProfileOverviewWidgetTestHarness(WidgetTester tester) : super(tester);
 
-  final homeWrapperCubit = HomeWrapperCubit();
-  final profileCubit = ProfileCubit(
-    sl<AuthRepository>(),
-    sl<UserRepository>(),
-    sl<AuthCubit>(),
-  );
+  final profileCubit = MockProfileCubit();
+  final authCubit = MockAuthCubit();
 }
 
 extension ExampleGiven on WidgetTestGiven<ProfileOverviewWidgetTestHarness> {
-  Future<void> widgetIsPumped() async {
-    await tester.pumpWidget(_TestProfileOverviewScreen(
-      profileCubit: this.harness.profileCubit,
-    ));
+  Future<void> userProfileStateAsInitial() async {
+    when(() => this.harness.profileCubit.state)
+        .thenReturn(ProfileState.initial());
+  }
+
+  Future<void> userProfileStateAsLoading() async {
+    when(() => this.harness.profileCubit.state)
+        .thenReturn(ProfileState.loading());
+  }
+
+  Future<void> userProfileStateAsLoadedWith(UserProfile userProfile) async {
+    when(() => this.harness.profileCubit.state)
+        .thenReturn(ProfileState.loaded(userProfile));
+  }
+
+  Future<void> userProfileStateAsError({
+    required UserProfile? userProfile,
+    required String error,
+  }) async {
+    when(() => this.harness.profileCubit.state).thenReturn(
+      ProfileState.error(userProfile, error),
+    );
+  }
+
+  Future<void> screenWidgetIsPumped() async {
+    await tester.pumpWidget(
+      const _TestProfileOverviewScreen(),
+    );
+  }
+
+  Future<void> contentWidgetIsPumped() async {
+    await tester.pumpWidget(
+      _TestProfileContentView(
+        authCubit: this.harness.authCubit,
+        profileCubit: this.harness.profileCubit,
+      ),
+    );
   }
 }
 
 extension ExampleWhen on WidgetTestWhen<ProfileOverviewWidgetTestHarness> {
-  void loadUserProfile(String userGuid) {
-    this.harness.profileCubit.loadUserProfile(userGuid);
-  }
-
   Future<void> userTapsOnLogoutButton() async {
     await tester.pump();
     await tester.tap(find.byType(TextButton));
@@ -60,8 +89,13 @@ extension ExampleThen on WidgetTestThen<ProfileOverviewWidgetTestHarness> {
   }
 
   Future<void> findInitialProfileOverview() async {
-    await tester.pump();
+    await tester.runAsync(() => tester.pump());
     expect(find.byKey(kOverviewFormInitial), findsOneWidget);
+  }
+
+  Future<void> findProfileOverview() async {
+    await tester.runAsync(() => tester.pump());
+    expect(find.byKey(kOverviewForm), findsOneWidget);
   }
 
   Future<void> findUserLoadedOverview() async {
@@ -74,11 +108,25 @@ extension ExampleThen on WidgetTestThen<ProfileOverviewWidgetTestHarness> {
 }
 
 class _TestProfileOverviewScreen extends StatelessWidget {
-  const _TestProfileOverviewScreen({
-    Key? key,
-    required this.profileCubit,
-  }) : super(key: key);
+  const _TestProfileOverviewScreen();
 
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: Scaffold(
+        body: ProfileOverviewScreen(),
+      ),
+    );
+  }
+}
+
+class _TestProfileContentView extends StatelessWidget {
+  const _TestProfileContentView({
+    required this.authCubit,
+    required this.profileCubit,
+  });
+
+  final AuthCubit authCubit;
   final ProfileCubit profileCubit;
 
   @override
@@ -87,9 +135,10 @@ class _TestProfileOverviewScreen extends StatelessWidget {
       home: Scaffold(
         body: MultiBlocProvider(
           providers: [
+            BlocProvider.value(value: authCubit),
             BlocProvider.value(value: profileCubit),
           ],
-          child: const ProfileOverviewScreen(),
+          child: const ProfileContentView(),
         ),
       ),
     );

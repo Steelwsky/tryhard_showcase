@@ -1,17 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:tryhard_showcase/app/data/datasource/models/exception.dart';
 import 'package:tryhard_showcase/app/data/datasource/models/user.dart';
 import 'package:tryhard_showcase/app/di/di.dart';
-import 'package:tryhard_showcase/features/profile/data/user_repository.dart';
+import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
+import 'package:tryhard_showcase/features/profile/domain/interactor/user_interactor.dart';
 
-import '../../../fake_storage.dart';
+import '../../../storage/fake_storage.dart';
 import 'support_test.dart';
 
 void main() {
   const String userGuid = '123456789101112';
-  const String exceptionCaseUserGuid = '11111';
   const String email = 'test@test.com';
 
   final UserProfile userProfile = UserProfile(
@@ -25,31 +24,18 @@ void main() {
     description: 'description',
   );
 
-  setUp(() async {
-    late Storage storage;
-    storage = FakeStorage();
-    when(() => storage.write(any(), any<dynamic>())).thenAnswer((_) async {});
-    when<dynamic>(() => storage.read(any())).thenReturn(<String, dynamic>{});
-    when(() => storage.delete(any())).thenAnswer((_) async {});
-    when(() => storage.clear()).thenAnswer((_) async {});
-
-    HydratedBloc.storage = storage;
-
+  setUpAll(() async {
+    initHydratedStorage();
     await initDi("test");
 
     when(
-      () => sl<UserRepository>().getUserProfile(
-        userGuid: userGuid,
-      ),
+      () => sl<AuthRepository>().getCurrentUserId(),
+    ).thenAnswer((_) => userGuid);
+    when(
+      () => sl<UserInteractor>().getUserProfile(userGuid: userGuid),
     ).thenAnswer((_) async {
       return userProfile;
     });
-
-    when(
-      () => sl<UserRepository>().getUserProfile(
-        userGuid: exceptionCaseUserGuid,
-      ),
-    ).thenThrow(dbException);
   });
 
   tearDown(() {
@@ -59,9 +45,9 @@ void main() {
   group('testing overview screen', () {
     group('loading user profile', () {
       testWidgets(
-        'widget is pumped',
+        'screen widget is pumped',
         harness((given, when, then) async {
-          await given.widgetIsPumped();
+          await given.screenWidgetIsPumped();
           await then.findOverviewScreen();
         }),
       );
@@ -69,30 +55,53 @@ void main() {
       testWidgets(
         'should show an initial overview form before loading user profile',
         harness((given, when, then) async {
-          await given.widgetIsPumped();
+          await given.userProfileStateAsInitial();
+          await given.contentWidgetIsPumped();
           await then.findInitialProfileOverview();
         }),
       );
 
       testWidgets(
-        'should show a loaded user overview',
-        harness((given, when, then) async {
-          await given.widgetIsPumped();
+        'should show a loading user overview',
+        harness((given, _, then) async {
+          await given.userProfileStateAsLoading();
+          await given.contentWidgetIsPumped();
+          then.findCircularProgressIndicator();
+        }),
+      );
 
-          when.loadUserProfile(userGuid);
-
+      testWidgets(
+        'should show a loaded user overview with user profile',
+        harness((given, _, then) async {
+          await given.userProfileStateAsLoadedWith(userProfile);
+          await given.contentWidgetIsPumped();
           then.findUserLoadedOverview();
         }),
       );
 
       testWidgets(
-        'should be no overview screen if getting user data api returns an error',
+        'should be an initial profile overview if getting user data api returns an error '
+        'and userProfile was null before fetching',
         harness((given, when, then) async {
-          await given.widgetIsPumped();
-
-          when.loadUserProfile(exceptionCaseUserGuid);
-
+          await given.userProfileStateAsError(
+            userProfile: null,
+            error: dbException.description,
+          );
+          await given.contentWidgetIsPumped();
           await then.findInitialProfileOverview();
+        }),
+      );
+
+      testWidgets(
+        'should be an overview screen if getting user data api returns an error '
+        'and userProfile was not null before fetching',
+        harness((given, when, then) async {
+          await given.userProfileStateAsError(
+            userProfile: userProfile,
+            error: dbException.description,
+          );
+          await given.contentWidgetIsPumped();
+          await then.findProfileOverview();
         }),
       );
     });

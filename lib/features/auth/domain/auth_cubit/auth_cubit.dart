@@ -1,4 +1,4 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:equatable/equatable.dart';
 import 'package:hydrated_bloc/hydrated_bloc.dart';
 import 'package:injectable/injectable.dart';
 import 'package:tryhard_showcase/app/data/auth/models/auth_exception.dart';
@@ -6,22 +6,18 @@ import 'package:tryhard_showcase/app/data/auth/models/auth_user/auth_user.dart';
 import 'package:tryhard_showcase/app/data/datasource/models/exception.dart';
 import 'package:tryhard_showcase/app/data/datasource/models/user_info_basic.dart';
 import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
-import 'package:tryhard_showcase/features/profile/data/user_repository.dart';
-
-part 'auth_cubit.freezed.dart';
-
-part 'auth_cubit.g.dart';
+import 'package:tryhard_showcase/features/profile/data/remote/user_repository.dart';
 
 part 'auth_state.dart';
 
 @Singleton()
 @prod
 @test
-class AuthCubit extends HydratedCubit<AuthState> {
+class AuthCubit extends Cubit<AuthState> {
   AuthCubit(
     this._authRepository,
     this._userRepository,
-  ) : super(AuthState.notAuthorized());
+  ) : super(AuthNotAuthorizedState());
 
   final AuthRepository _authRepository;
   final UserRepository _userRepository;
@@ -35,9 +31,9 @@ class AuthCubit extends HydratedCubit<AuthState> {
         email: email,
         password: password,
       );
-      emit(AuthState.authorized(user));
+      emit(AuthAuthorizedState(user: user));
     } on AuthException catch (_) {
-      emit(AuthState.notAuthorized());
+      emit(AuthNotAuthorizedState());
       rethrow;
     }
   }
@@ -55,7 +51,7 @@ class AuthCubit extends HydratedCubit<AuthState> {
         password: password,
       );
     } on AuthException catch (_) {
-      emit(AuthState.notAuthorized());
+      emit(AuthNotAuthorizedState());
       rethrow;
     }
     try {
@@ -67,9 +63,9 @@ class AuthCubit extends HydratedCubit<AuthState> {
           isTrainer: false,
         ),
       );
-      emit(AuthState.authorized(user));
+      emit(AuthAuthorizedState(user: user));
     } on ApiException catch (_) {
-      emit(AuthState.notAuthorized());
+      emit(AuthNotAuthorizedState());
       rethrow;
     }
   }
@@ -86,40 +82,20 @@ class AuthCubit extends HydratedCubit<AuthState> {
           photoUrl: user.photoUrl,
         ),
       );
-      emit(AuthState.authorized(user));
+      emit(AuthAuthorizedState(user: user));
     } on Exception catch (_) {
-      emit(AuthState.notAuthorized());
+      emit(AuthNotAuthorizedState());
       rethrow;
     }
   }
 
   Future<void> logout() async {
     try {
-      // throw AuthException(code: 'code', message: 'message');
-      _authRepository.logout();
-      emit(AuthState.notAuthorized());
-    } on Exception catch (_) {
-      rethrow;
+      await _authRepository.logout();
+    } on AuthException catch (e) {
+      emit(AuthErrorState(message: e.message));
+    } finally {
+      emit(AuthNotAuthorizedState());
     }
-  }
-
-  @override
-  AuthState? fromJson(Map<String, dynamic> json) {
-    if (json.isEmpty) return AuthState.notAuthorized();
-    final state = AuthState.fromJson(json);
-    return state.whenOrNull(
-      authorized: (user) => AuthState.authorized(user),
-      notAuthorized: () => AuthState.notAuthorized(),
-    );
-  }
-
-  @override
-  Map<String, dynamic>? toJson(AuthState state) {
-    return state
-            .whenOrNull(
-              authorized: (authUser) => AuthState.authorized(authUser),
-            )
-            ?.toJson() ??
-        AuthState.notAuthorized().toJson();
   }
 }

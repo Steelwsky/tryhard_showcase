@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:flutter/material.dart';
+import 'package:tryhard_showcase/app/constants/keys.dart';
 
 class BottomNavBarProps {
   final int initialTab;
@@ -26,15 +27,24 @@ class BottomNavBarItems {
   BottomNavBarItems() {
     _tabs = [
       BottomNavBarItemModel(
+        name: 'Stopwatch',
+        icon: const Icon(
+          Icons.timer,
+          key: kBottomNavBarStopwatchItem,
+        ),
+      ),
+      BottomNavBarItemModel(
         name: 'Profile',
         icon: const Icon(
           Icons.person,
+          key: kBottomNavBarProfileItem,
         ),
       ),
       BottomNavBarItemModel(
         name: 'Info',
         icon: const Icon(
           Icons.info,
+          key: kBottomNavBarInfoItem,
         ),
       ),
     ];

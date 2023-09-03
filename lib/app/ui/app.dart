@@ -5,56 +5,29 @@ import 'package:tryhard_showcase/app/di/di.dart';
 import 'package:tryhard_showcase/app/navigation/routes.dart';
 import 'package:tryhard_showcase/app/ui/root_screen.dart';
 import 'package:tryhard_showcase/app/ui/styles/theme.dart';
-import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
 import 'package:tryhard_showcase/features/auth/domain/auth_cubit/auth_cubit.dart';
-import 'package:tryhard_showcase/features/auth/domain/auth_form_cubit/auth_form_cubit.dart';
-import 'package:tryhard_showcase/features/home_wrapper/domain/home_cubit/home_cubit.dart';
 import 'package:tryhard_showcase/features/inner_page/inner_screen.dart';
-import 'package:tryhard_showcase/features/profile/data/user_repository.dart';
-import 'package:tryhard_showcase/features/profile/domain/profile_cubit.dart';
 
 class App extends StatelessWidget {
-  const App({
-    Key? key,
-  }) : super(key: key);
+  const App({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => sl.get<AuthCubit>(),
-        ),
-        BlocProvider(
-          create: (_) => AuthFormCubit(sl.get<AuthCubit>()),
-        ),
-        BlocProvider(
-          create: (_) => HomeWrapperCubit(),
-        ),
-        BlocProvider(
-          create: (_) => ProfileCubit(
-            sl.get<AuthRepository>(),
-            sl.get<UserRepository>(),
-            sl.get<AuthCubit>(),
-          )..loadUserProfile(
-              sl.get<AuthRepository>().getCurrentUserId(),
-            ),
-        ),
-      ],
+    return BlocProvider(
+      create: (_) => sl.get<AuthCubit>(),
       child: const _MaterialApp(),
     );
   }
 }
 
 class _MaterialApp extends StatelessWidget {
-  const _MaterialApp({
-    Key? key,
-  }) : super(key: key);
+  const _MaterialApp();
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'TRYHARD showcase',
+      debugShowCheckedModeBanner: false,
+      title: 'TRYHARD',
       theme: myTheme,
       routerConfig: _goRouter,
     );
@@ -64,14 +37,16 @@ class _MaterialApp extends StatelessWidget {
 final _goRouter = GoRouter(
   routes: [
     GoRoute(
-        path: RoutePaths.root,
-        builder: (context, state) {
-          return const RootScreen();
-        }),
+      path: RoutePaths.root,
+      builder: (context, state) {
+        return const RootScreen();
+      },
+    ),
     GoRoute(
-        path: RoutePaths.innerPage,
-        builder: (context, state) {
-          return const InnerScreen();
-        }),
+      path: RoutePaths.innerPage,
+      builder: (context, state) {
+        return const InnerScreen();
+      },
+    ),
   ],
 );

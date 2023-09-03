@@ -2,26 +2,31 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tryhard_showcase/app/constants/keys.dart';
+import 'package:tryhard_showcase/app/di/di.dart';
 import 'package:tryhard_showcase/app/ui/styles/colors.dart';
 import 'package:tryhard_showcase/app/ui/styles/style_constants.dart';
+import 'package:tryhard_showcase/features/auth/domain/auth_cubit/auth_cubit.dart';
 import 'package:tryhard_showcase/features/auth/domain/auth_form_cubit/auth_form_cubit.dart';
 import 'package:tryhard_showcase/features/auth/domain/auth_form_cubit/auth_form_state.dart';
 import 'package:tryhard_showcase/gen/assets.gen.dart';
 
 class AuthForm extends StatelessWidget {
-  const AuthForm({Key? key}) : super(key: key);
+  const AuthForm({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      key: kAuthFormWidget,
-      children: [
-        const _FormHeader(),
-        _FormBody(),
-        _spacer,
-        const _GoogleLogInButton(),
-        _spacer,
-      ],
+    return BlocProvider(
+      create: (_) => AuthFormCubit(sl.get<AuthCubit>()),
+      child: Column(
+        key: kAuthFormWidget,
+        children: [
+          const _FormHeader(),
+          _FormBody(),
+          _spacer,
+          const _GoogleLogInButton(),
+          _spacer,
+        ],
+      ),
     );
   }
 }
@@ -31,89 +36,75 @@ const Widget _spacer = SizedBox(
 );
 
 class _FormHeader extends StatelessWidget {
-  const _FormHeader({
-    Key? key,
-  }) : super(key: key);
+  const _FormHeader();
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<AuthFormCubit>();
     return Row(
       children: [
-        Flexible(
-          flex: 5,
-          child: InkWell(
-            key: kHeaderTitleLogin,
-            onTap: () => context
-                .read<AuthFormCubit>()
-                .onFormTypeChanged(AuthFormType.login),
-            splashColor: Colors.transparent,
-            hoverColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            child: Column(
-              children: [
-                const Text(
-                  "Login",
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(
-                  height: 4,
-                ),
-                BlocBuilder<AuthFormCubit, AuthFormState>(
-                  builder: (context, state) {
-                    return Divider(
-                      thickness: 5,
-                      height: 4,
-                      color: state.selectedFormType == AuthFormType.login
-                          ? AppColors.primary
-                          : Colors.transparent,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+        _SwitchableHeader(
+          title: "Login",
+          onTap: (type) => cubit.onFormTypeChanged(type),
+          formType: AuthFormType.login,
         ),
-        Flexible(
-          flex: 5,
-          child: InkWell(
-            key: kHeaderTitleRegister,
-            onTap: () => context
-                .read<AuthFormCubit>()
-                .onFormTypeChanged(AuthFormType.register),
-            splashColor: Colors.transparent,
-            hoverColor: Colors.transparent,
-            focusColor: Colors.transparent,
-            highlightColor: Colors.transparent,
-            child: Column(
-              children: [
-                const Text(
-                  "Register",
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
-                ),
-                const SizedBox(
-                  height: 4,
-                ),
-                BlocBuilder<AuthFormCubit, AuthFormState>(
-                  builder: (context, state) {
-                    return Divider(
-                      thickness: 5,
-                      height: 4,
-                      color: state.selectedFormType == AuthFormType.register
-                          ? AppColors.primary
-                          : Colors.transparent,
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+        _SwitchableHeader(
+          title: "Register",
+          onTap: (type) => cubit.onFormTypeChanged(type),
+          formType: AuthFormType.register,
         ),
       ],
+    );
+  }
+}
+
+class _SwitchableHeader extends StatelessWidget {
+  const _SwitchableHeader({
+    required this.title,
+    required this.onTap,
+    required this.formType,
+  });
+
+  final String title;
+  final Function(AuthFormType) onTap;
+  final AuthFormType formType;
+
+  @override
+  Widget build(BuildContext context) {
+    final selectedFormType =
+        context.watch<AuthFormCubit>().state.selectedFormType;
+    return Flexible(
+      flex: 5,
+      child: InkWell(
+        key: formType == AuthFormType.login
+            ? kHeaderTitleLogin
+            : kHeaderTitleRegister,
+        onTap: () => onTap(formType),
+        splashColor: Colors.transparent,
+        hoverColor: Colors.transparent,
+        focusColor: Colors.transparent,
+        highlightColor: Colors.transparent,
+        child: Column(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                fontSize: 20,
+              ),
+            ),
+            const SizedBox(
+              height: 4,
+            ),
+            Divider(
+              thickness: 5,
+              height: 4,
+              color: selectedFormType == formType
+                  ? AppColors.primary
+                  : Colors.transparent,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -150,7 +141,7 @@ class _FormBody extends StatelessWidget {
                   isPasswordHidden: state.isPasswordHidden,
                 ),
                 if (state.selectedFormType == AuthFormType.register)
-                  const _IsTrainer(),
+                  const _TrainerSubForm(),
                 _PossibleErrorMessage(
                   errorMessage: state.errorMessage,
                 ),
@@ -167,10 +158,7 @@ class _FormBody extends StatelessWidget {
 }
 
 class _EmailField extends StatelessWidget {
-  const _EmailField({
-    Key? key,
-    required this.initialValue,
-  }) : super(key: key);
+  const _EmailField({required this.initialValue});
 
   final String? initialValue;
 
@@ -189,10 +177,9 @@ class _EmailField extends StatelessWidget {
 
 class _PasswordField extends StatelessWidget {
   const _PasswordField({
-    Key? key,
     required this.initialValue,
     required this.isPasswordHidden,
-  }) : super(key: key);
+  });
 
   final String? initialValue;
   final bool isPasswordHidden;
@@ -219,10 +206,8 @@ class _PasswordField extends StatelessWidget {
   }
 }
 
-class _IsTrainer extends StatelessWidget {
-  const _IsTrainer({
-    Key? key,
-  }) : super(key: key);
+class _TrainerSubForm extends StatelessWidget {
+  const _TrainerSubForm();
 
   @override
   Widget build(BuildContext context) {
@@ -231,27 +216,35 @@ class _IsTrainer extends StatelessWidget {
       children: [
         _spacer,
         TextFormField(
+          key: kTrainerField,
           decoration: const InputDecoration(
             hintText: 'Name',
           ),
           onChanged: context.read<AuthFormCubit>().onNameChanged,
         ),
         _spacer,
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Are you a trainer?'),
-            BlocBuilder<AuthFormCubit, AuthFormState>(
-              builder: (context, state) {
-                return CupertinoSwitch(
-                  value: state.inputs.isTrainer,
-                  activeColor: AppColors.primary,
-                  onChanged: (_) =>
-                      context.read<AuthFormCubit>().onIsTrainerChanged(),
-                );
-              },
-            ),
-          ],
+        const _TrainerSwitchField(),
+      ],
+    );
+  }
+}
+
+class _TrainerSwitchField extends StatelessWidget {
+  const _TrainerSwitchField();
+
+  @override
+  Widget build(BuildContext context) {
+    final value = context
+        .select<AuthFormCubit, bool>((cubit) => cubit.state.inputs.isTrainer);
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        const Text('Are you a trainer?'),
+        CupertinoSwitch(
+          key: kTrainerSwitch,
+          value: value,
+          activeColor: AppColors.primary,
+          onChanged: (_) => context.read<AuthFormCubit>().onIsTrainerChanged(),
         ),
       ],
     );
@@ -259,10 +252,7 @@ class _IsTrainer extends StatelessWidget {
 }
 
 class _PossibleErrorMessage extends StatelessWidget {
-  const _PossibleErrorMessage({
-    Key? key,
-    required this.errorMessage,
-  }) : super(key: key);
+  const _PossibleErrorMessage({required this.errorMessage});
 
   final String? errorMessage;
 
@@ -288,10 +278,7 @@ class _PossibleErrorMessage extends StatelessWidget {
 }
 
 class _LoginOrRegisterButton extends StatelessWidget {
-  const _LoginOrRegisterButton({
-    Key? key,
-    required this.state,
-  }) : super(key: key);
+  const _LoginOrRegisterButton({required this.state});
 
   final AuthFormState state;
 
@@ -336,9 +323,7 @@ class _LoginOrRegisterButton extends StatelessWidget {
 }
 
 class _Loading extends StatelessWidget {
-  const _Loading({
-    Key? key,
-  }) : super(key: key);
+  const _Loading();
 
   @override
   Widget build(BuildContext context) {
@@ -351,56 +336,53 @@ class _Loading extends StatelessWidget {
 }
 
 class _GoogleLogInButton extends StatelessWidget {
-  const _GoogleLogInButton({
-    Key? key,
-  }) : super(key: key);
+  const _GoogleLogInButton();
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<AuthFormCubit, AuthFormState>(
-      builder: (context, state) {
-        if (state.authButtonState == AuthButtonState.loading) {
-          return const SizedBox();
-        }
-        return RawMaterialButton(
-          key: kGoogleSignInButton,
-          constraints: const BoxConstraints(
-            maxWidth: 200,
-            maxHeight: 42,
-            minHeight: 42,
+    final authButtonState = context.select<AuthFormCubit, AuthButtonState>(
+        (cubit) => cubit.state.authButtonState);
+
+    if (authButtonState == AuthButtonState.loading) {
+      return const SizedBox();
+    }
+    return RawMaterialButton(
+      key: kGoogleSignInButton,
+      constraints: const BoxConstraints(
+        maxWidth: 200,
+        maxHeight: 42,
+        minHeight: 42,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadiusConstants.borderRadius16,
+      ),
+      onPressed: context.read<AuthFormCubit>().onGoogleSignIn,
+      fillColor: AppColors.backgroundSecondary,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Image.asset(
+            Assets.google.path,
+            width: 20,
+            height: 20,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadiusConstants.borderRadius16,
+          const SizedBox(
+            width: 10,
           ),
-          onPressed: context.read<AuthFormCubit>().onGoogleSignIn,
-          fillColor: AppColors.backgroundSecondary,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Image.asset(
-                Assets.google.path,
-                width: 20,
-                height: 20,
+          const SizedBox(
+            width: 103,
+            child: Text(
+              'Login with Google',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: Colors.white,
               ),
-              const SizedBox(
-                width: 10,
-              ),
-              const SizedBox(
-                width: 103,
-                child: Text(
-                  'Login with Google',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
 }

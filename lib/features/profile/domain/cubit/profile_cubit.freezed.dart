@@ -1,7 +1,7 @@
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
-// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'profile_cubit.dart';
 
@@ -41,7 +41,6 @@ mixin _$ProfileState {
     required TResult Function(UserProfile? userProfile, String error) error,
   }) =>
       throw _privateConstructorUsedError;
-
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
@@ -59,7 +58,6 @@ mixin _$ProfileState {
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
-
   @optionalTypeArgs
   TResult map<TResult extends Object?>({
     required TResult Function(_ProfileStateInit value) initial,
@@ -68,7 +66,6 @@ mixin _$ProfileState {
     required TResult Function(_ProfileStateError value) error,
   }) =>
       throw _privateConstructorUsedError;
-
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>({
     TResult? Function(_ProfileStateInit value)? initial,
@@ -86,7 +83,6 @@ mixin _$ProfileState {
     required TResult orElse(),
   }) =>
       throw _privateConstructorUsedError;
-
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 }
 
@@ -104,7 +100,6 @@ class _$ProfileStateCopyWithImpl<$Res, $Val extends ProfileState>
 
   // ignore: unused_field
   final $Val _value;
-
   // ignore: unused_field
   final $Res Function($Val) _then;
 }
@@ -376,7 +371,6 @@ abstract class _$$_ProfileStateLoadedCopyWith<$Res> {
   factory _$$_ProfileStateLoadedCopyWith(_$_ProfileStateLoaded value,
           $Res Function(_$_ProfileStateLoaded) then) =
       __$$_ProfileStateLoadedCopyWithImpl<$Res>;
-
   @useResult
   $Res call({UserProfile userProfile});
 }
@@ -533,7 +527,6 @@ abstract class _ProfileStateLoaded implements ProfileState {
       _$_ProfileStateLoaded.fromJson;
 
   UserProfile get userProfile;
-
   @JsonKey(ignore: true)
   _$$_ProfileStateLoadedCopyWith<_$_ProfileStateLoaded> get copyWith =>
       throw _privateConstructorUsedError;
@@ -544,7 +537,6 @@ abstract class _$$_ProfileStateErrorCopyWith<$Res> {
   factory _$$_ProfileStateErrorCopyWith(_$_ProfileStateError value,
           $Res Function(_$_ProfileStateError) then) =
       __$$_ProfileStateErrorCopyWithImpl<$Res>;
-
   @useResult
   $Res call({UserProfile? userProfile, String error});
 }
@@ -710,9 +702,7 @@ abstract class _ProfileStateError implements ProfileState {
       _$_ProfileStateError.fromJson;
 
   UserProfile? get userProfile;
-
   String get error;
-
   @JsonKey(ignore: true)
   _$$_ProfileStateErrorCopyWith<_$_ProfileStateError> get copyWith =>
       throw _privateConstructorUsedError;

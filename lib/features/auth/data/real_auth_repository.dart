@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
+import 'package:tryhard_showcase/app/constants/strings/user_guids.dart';
 import 'package:tryhard_showcase/app/data/auth/auth.dart';
 import 'package:tryhard_showcase/app/data/auth/models/auth_exception.dart';
 import 'package:tryhard_showcase/app/data/auth/models/auth_user/auth_user.dart';
@@ -16,7 +17,10 @@ class RealAuthRepository implements AuthRepository {
   late final AuthApi _auth;
 
   @override
-  Future<AuthUser> login({required String email, required String password, x}) {
+  Future<AuthUser> login({
+    required String email,
+    required String password,
+  }) {
     try {
       return _auth.userLogin(
         email: email,
@@ -70,6 +74,6 @@ class RealAuthRepository implements AuthRepository {
 
   @override
   String getCurrentUserId() {
-    return _auth.getCurrentUserId() ?? "-1";
+    return _auth.getCurrentUserId() ?? UserGuids.unknownGuid;
   }
 }

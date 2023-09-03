@@ -1,7 +1,7 @@
 // coverage:ignore-file
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
-// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
 part of 'home_cubit.dart';
 
@@ -17,9 +17,7 @@ final _privateConstructorUsedError = UnsupportedError(
 /// @nodoc
 mixin _$HomeWrapperState {
   int get page => throw _privateConstructorUsedError;
-
   List<Widget> get pages => throw _privateConstructorUsedError;
-
   List<BottomNavBarItemModel> get tabs => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
@@ -32,7 +30,6 @@ abstract class $HomeWrapperStateCopyWith<$Res> {
   factory $HomeWrapperStateCopyWith(
           HomeWrapperState value, $Res Function(HomeWrapperState) then) =
       _$HomeWrapperStateCopyWithImpl<$Res, HomeWrapperState>;
-
   @useResult
   $Res call({int page, List<Widget> pages, List<BottomNavBarItemModel> tabs});
 }
@@ -44,7 +41,6 @@ class _$HomeWrapperStateCopyWithImpl<$Res, $Val extends HomeWrapperState>
 
   // ignore: unused_field
   final $Val _value;
-
   // ignore: unused_field
   final $Res Function($Val) _then;
 
@@ -78,7 +74,6 @@ abstract class _$$_HomeWrapperStateCopyWith<$Res>
   factory _$$_HomeWrapperStateCopyWith(
           _$_HomeWrapperState value, $Res Function(_$_HomeWrapperState) then) =
       __$$_HomeWrapperStateCopyWithImpl<$Res>;
-
   @override
   @useResult
   $Res call({int page, List<Widget> pages, List<BottomNavBarItemModel> tabs});
@@ -129,17 +124,17 @@ class _$_HomeWrapperState implements _HomeWrapperState {
   @override
   final int page;
   final List<Widget> _pages;
-
   @override
   List<Widget> get pages {
+    if (_pages is EqualUnmodifiableListView) return _pages;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_pages);
   }
 
   final List<BottomNavBarItemModel> _tabs;
-
   @override
   List<BottomNavBarItemModel> get tabs {
+    if (_tabs is EqualUnmodifiableListView) return _tabs;
     // ignore: implicit_dynamic_type
     return EqualUnmodifiableListView(_tabs);
   }
@@ -181,13 +176,10 @@ abstract class _HomeWrapperState implements HomeWrapperState {
 
   @override
   int get page;
-
   @override
   List<Widget> get pages;
-
   @override
   List<BottomNavBarItemModel> get tabs;
-
   @override
   @JsonKey(ignore: true)
   _$$_HomeWrapperStateCopyWith<_$_HomeWrapperState> get copyWith =>

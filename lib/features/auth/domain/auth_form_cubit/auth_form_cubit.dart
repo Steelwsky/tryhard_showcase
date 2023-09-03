@@ -68,8 +68,8 @@ class AuthFormCubit extends HydratedCubit<AuthFormState> {
       );
       return;
     }
+    _setFormStateLoading();
     try {
-      _setFormStateLoading();
       await _authCubit.logIn(
         email: state.inputs.email!,
         password: state.inputs.password!,
@@ -91,8 +91,8 @@ class AuthFormCubit extends HydratedCubit<AuthFormState> {
       );
       return;
     }
+    _setFormStateLoading();
     try {
-      _setFormStateLoading();
       await _authCubit.register(
         email: state.inputs.email!,
         password: state.inputs.password!,
@@ -114,8 +114,8 @@ class AuthFormCubit extends HydratedCubit<AuthFormState> {
   }
 
   Future<void> onGoogleSignIn() async {
+    _setFormStateLoading();
     try {
-      _setFormStateLoading();
       await _authCubit.onGoogleSignIn();
       _setFormStateDone();
     } on AuthException catch (e) {

@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:given_when_then/given_when_then.dart';
 import 'package:tryhard_showcase/app/constants/keys.dart';
-import 'package:tryhard_showcase/app/di/di.dart';
-import 'package:tryhard_showcase/features/auth/domain/auth_cubit/auth_cubit.dart';
-import 'package:tryhard_showcase/features/auth/domain/auth_form_cubit/auth_form_cubit.dart';
 import 'package:tryhard_showcase/features/auth/ui/auth_form.dart';
 
 Future<void> Function(WidgetTester) harness(
@@ -17,17 +13,12 @@ Future<void> Function(WidgetTester) harness(
 class LoginFormWidgetTestHarness extends WidgetTestHarness {
   LoginFormWidgetTestHarness(WidgetTester tester) : super(tester);
 
-  final authCubit = sl<AuthCubit>();
-  late final authFormCubit = AuthFormCubit(authCubit);
 }
 
 extension ExampleGiven on WidgetTestGiven<LoginFormWidgetTestHarness> {
   Future<void> loginFormIsPumped() async {
     await tester.pumpWidget(
-      LoginFormTest(
-        authCubit: this.harness.authCubit,
-        authFormCubit: this.harness.authFormCubit,
-      ),
+      const LoginFormTest(),
     );
   }
 }
@@ -132,25 +123,13 @@ extension ExampleThen on WidgetTestThen<LoginFormWidgetTestHarness> {
 }
 
 class LoginFormTest extends StatelessWidget {
-  const LoginFormTest({
-    Key? key,
-    required this.authCubit,
-    required this.authFormCubit,
-  }) : super(key: key);
-  final AuthCubit authCubit;
-  final AuthFormCubit authFormCubit;
+  const LoginFormTest({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       home: Scaffold(
-        body: MultiBlocProvider(
-          providers: [
-            BlocProvider.value(value: authCubit),
-            BlocProvider.value(value: authFormCubit),
-          ],
-          child: const AuthForm(),
-        ),
+        body: AuthForm(),
       ),
     );
   }

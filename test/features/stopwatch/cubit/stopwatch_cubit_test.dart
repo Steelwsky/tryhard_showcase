@@ -1,4 +1,5 @@
 import 'package:bloc_test/bloc_test.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:tryhard_showcase/features/stopwatch/domain/cubit/stopwatch_cubit.dart';
 
@@ -7,39 +8,49 @@ import '../../../storage/fake_storage.dart';
 void main() {
   const int testDuration = 10;
 
-  TestWidgetsFlutterBinding.ensureInitialized();
+  late StopwatchCubit stopwatchCubit;
+
+  const channel = MethodChannel('assets_audio_player');
 
   setUp(() async {
     initHydratedStorage();
+
+    stopwatchCubit = StopwatchCubit();
+
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (_) => Future.value(null));
   });
 
-  // TODO return to tests later. Tests crash when starting all together.
-  // Running 1 by 1 completes successfully.
+  tearDown(() {
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(channel, (_) => Future.value(null));
+  });
+
   group("StopwatchCubit", () {
     test("Initial state of cubit", () {
-      expect(StopwatchCubit().state, StopwatchState.initial());
+      expect(stopwatchCubit.state, StopwatchState.initial());
     });
 
     blocTest("Stopwatch view switches",
-        build: () => StopwatchCubit()..openAudioAsset(),
+        build: () => stopwatchCubit,
         act: (cubit) => cubit.switchView(),
         expect: () => <StopwatchState>[
-              StopwatchState(
-                currentView: StopwatchView.stopwatch,
-                durationInSecs: StopwatchState.initial().durationInSecs,
-                isMuted: StopwatchState.initial().isMuted,
-              ),
-            ]);
+          StopwatchState(
+            currentView: StopwatchView.stopwatch,
+            durationInSecs: StopwatchState.initial().durationInSecs,
+            isMuted: StopwatchState.initial().isMuted,
+          ),
+        ]);
 
     blocTest("Stopwatch duration changes",
-        build: () => StopwatchCubit()..openAudioAsset(),
+        build: () => stopwatchCubit,
         act: (cubit) => cubit.setDuration(testDuration),
         expect: () => <StopwatchState>[
-              StopwatchState(
-                durationInSecs: testDuration,
-                currentView: StopwatchState.initial().currentView,
-                isMuted: StopwatchState.initial().isMuted,
-              ),
-            ]);
+          StopwatchState(
+            durationInSecs: testDuration,
+            currentView: StopwatchState.initial().currentView,
+            isMuted: StopwatchState.initial().isMuted,
+          ),
+        ]);
   });
 }

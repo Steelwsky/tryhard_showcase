@@ -9,12 +9,10 @@ void main() {
 
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  setUp(() async {
+  setUp(() {
     initHydratedStorage();
   });
 
-  // TODO return to tests later. Tests crash when starting all together.
-  // Running 1 by 1 completes successfully.
   group("StopwatchCubit", () {
     test("Initial state of cubit", () {
       expect(StopwatchCubit().state, StopwatchState.initial());

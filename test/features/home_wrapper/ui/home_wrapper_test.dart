@@ -6,7 +6,7 @@ import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
 import 'package:tryhard_showcase/features/profile/domain/interactor/user_interactor.dart';
 
 import '../../../storage/fake_storage.dart';
-import 'home_wrapper_support_test.dart';
+import 'home_wrapper_support.dart';
 
 void main() {
   const String userGuid = '123456789101112';

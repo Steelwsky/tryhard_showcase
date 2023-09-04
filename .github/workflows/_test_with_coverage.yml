@@ -27,7 +27,7 @@ jobs:
         run: flutter pub get
 
       - name: Run tests with coverage
-        run: test_utils/scripts/test.sh ${{ github.workspace }}
+        run: test_utils/scripts/test-coverage.sh ${{ github.workspace }}
 
       - name: Publish test results
         id: compute_test_results

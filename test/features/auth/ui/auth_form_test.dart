@@ -7,7 +7,7 @@ import 'package:tryhard_showcase/features/auth/data/auth_repository.dart';
 import 'package:tryhard_showcase/features/auth/domain/models/user_input.dart';
 
 import '../../../storage/fake_storage.dart';
-import 'auth_form_support_test.dart';
+import 'auth_form_support.dart';
 
 void main() {
   const String userGuid = "123456789010111213";
